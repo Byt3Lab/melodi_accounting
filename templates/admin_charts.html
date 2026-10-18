@@ -1,0 +1,306 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.plans_comptables_zones_generales', 'Plans Comptables & Zones Générales') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.gestion_des_referentiels_multi', 'Gestion des référentiels multi-zones, rattachement des pays et héritage par agence') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createChartModal">
+        <img src="/static_base_icons?name=add" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouveau_plan_comptable', 'Nouveau Plan Comptable') }}
+      </button>
+      <button class="btn btn-outline-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createZoneModal">
+        <img src="/static_base_icons?name=public" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouvelle_zone', 'Nouvelle Zone') }}
+      </button>
+      <button class="btn btn-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#linkCountryZoneModal">
+        <img src="/static_base_icons?name=flag&fill=white" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.lier_pays_a_une', 'Lier Pays à une Zone') }}
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-0 pt-3 pb-2">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2"><img src="/static_base_icons?name=account_tree" style="width: 18px; height: 18px;"> {{ t('melodi_accounting.plans_comptables_charts_of', 'Plans Comptables (Charts of Accounts)') }}</h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>{{ t('melodi_accounting.code_id', 'Code ID') }}</th>
+                <th>{{ t('melodi_accounting.nom_du_plan', 'Nom du Plan') }}</th>
+                <th>{{ t('melodi_accounting.role_erp', 'Rôle ERP') }}</th>
+                <th>{{ t('melodi_accounting.statut', 'Statut') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for chart in charts %}
+              <tr>
+                <td class="font-monospace fw-bold">{{ chart.id }}</td>
+                <td>{{ chart.name }}</td>
+                <td>
+                  {% if chart.id == hq_chart_id %}
+                    <span class="badge bg-primary">{{ t('melodi_accounting.siege_herite', 'Siège (Hérité)') }}</span>
+                  {% else %}
+                    <span class="badge bg-info text-dark">{{ t('melodi_accounting.regional_local', 'Régional / Local') }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if chart.is_active %}
+                    <span class="badge bg-success-subtle text-success border">{{ t('melodi_accounting.actif', 'Actif') }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ t('melodi_accounting.inactif', 'Inactif') }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-0 pt-3 pb-2">
+          <h6 class="fw-bold mb-0 d-flex align-items-center gap-2"><img src="/static_base_icons?name=public" style="width: 18px; height: 18px;"> {{ t('melodi_accounting.zones_comptables_zones', 'Zones Comptables (Zones)') }}</h6>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>{{ t('melodi_accounting.code_zone', 'Code Zone') }}</th>
+                <th>{{ t('melodi_accounting.nom_de_la_zone', 'Nom de la Zone') }}</th>
+                <th>{{ t('melodi_accounting.plan_rattache', 'Plan Rattaché') }}</th>
+                <th class="text-end">{{ t('melodi_accounting.details_pays_agences', 'Détails / Pays & Agences') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for z in zones %}
+              <tr>
+                <td class="font-monospace fw-bold">{{ z.code }}</td>
+                <td>{{ z.name }}</td>
+                <td><span class="badge bg-light text-dark border">{{ z.chart_id }}</span></td>
+                <td class="text-end">
+                  <button class="btn btn-xs btn-outline-dark d-inline-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#zoneDetailsModal_{{ z.code }}">
+                    <img src="/static_base_icons?name=visibility" style="width: 14px; height: 14px;"> {{ t('melodi_accounting.voir_pays_agences', 'Voir pays & agences') }}
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" class="text-center text-muted py-3">{{ t('melodi_accounting.aucune_zone_configuree', 'Aucune zone configurée.') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Créer Plan Comptable -->
+<div class="modal fade" id="createChartModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/charts">
+        <input type="hidden" name="action_type" value="create_chart">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.nouveau_plan_comptable', 'Nouveau Plan Comptable') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.identifiant_id', 'Identifiant (ID)') }}</label>
+            <input type="text" name="id" class="form-control form-control-sm font-monospace" required placeholder="Ex: SYSCOHADA_2026">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.nom_complet_du_plan', 'Nom complet du Plan') }}</label>
+            <input type="text" name="name" class="form-control form-control-sm" required placeholder="Ex: Plan Comptable SYSCOHADA Révisé">
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.creer_le_plan', 'Créer le Plan') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Créer Zone Comptable -->
+<div class="modal fade" id="createZoneModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/charts">
+        <input type="hidden" name="action_type" value="create_zone">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.nouvelle_zone_comptable', 'Nouvelle Zone Comptable') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.code_zone', 'Code Zone') }}</label>
+            <input type="text" name="code" class="form-control form-control-sm font-monospace" required placeholder="Ex: CEMAC">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.nom_de_la_zone', 'Nom de la Zone') }}</label>
+            <input type="text" name="name" class="form-control form-control-sm" required placeholder="Ex: Zone Afrique Centrale (CEMAC)">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.plan_comptable_rattache', 'Plan Comptable Rattaché') }}</label>
+            <select name="chart_id" class="form-select form-select-sm" required>
+              {% for chart in charts %}
+              <option value="{{ chart.id }}">{{ chart.name }} ({{ chart.id }})</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.creer_la_zone', 'Créer la Zone') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modales de Détails des Pays & Agences par Zone -->
+{% for z in zones %}
+<div class="modal fade" id="zoneDetailsModal_{{ z.code }}" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-bold d-flex align-items-center gap-2">
+            <img src="/static_base_icons?name=public" style="width: 20px; height: 20px;"> Zone : {{ z.name }} ({{ z.code }})
+          </h5>
+          <small class="text-muted">{{ t('melodi_accounting.plan_comptable_d_imputation', 'Plan Comptable d\'Imputation :') }} <span class="fw-bold text-dark">{{ z.chart_id }}</span></small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6 class="fw-bold small border-bottom pb-2 mb-3">{{ t('melodi_accounting.1_pays_rattaches_a', '1. Pays Rattachés à cette Zone & Devises') }}</h6>
+        <div class="table-responsive mb-4">
+          <table class="table table-sm table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>{{ t('melodi_accounting.code_iso', 'Code ISO') }}</th>
+                <th>{{ t('melodi_accounting.nom_du_pays', 'Nom du Pays') }}</th>
+                <th>{{ t('melodi_accounting.devise_par_defaut', 'Devise par Défaut') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set zone_countries = countries | selectattr('zone_code', 'equalto', z.code) | list %}
+              {% for c in zone_countries %}
+              <tr>
+                <td class="font-monospace fw-bold">{{ c.code_iso }}</td>
+                <td>{{ c.name }}</td>
+                <td>
+                  <span class="badge bg-secondary-subtle text-dark border font-monospace">
+                    {{ c.default_currency_code or 'XAF' }}
+                  </span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="3" class="text-center text-muted py-3">Aucun pays actuellement rattaché à la zone {{ z.code }}.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <h6 class="fw-bold small border-bottom pb-2 mb-3">{{ t('melodi_accounting.2_agences_succursales_liees', '2. Agences / Succursales liées dans ces Pays (Héritage du Plan)') }}</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0 small">
+            <thead class="table-light">
+              <tr>
+                <th>{{ t('melodi_accounting.code_agence', 'Code Agence') }}</th>
+                <th>{{ t('melodi_accounting.nom_de_l_agence', 'Nom de l\'Agence') }}</th>
+                <th>{{ t('melodi_accounting.pays_de_l_agence', 'Pays de l\'Agence') }}</th>
+                <th>{{ t('melodi_accounting.devise_d_agence', 'Devise d\'Agence') }}</th>
+                <th>{{ t('melodi_accounting.statut', 'Statut') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set zone_country_codes = zone_countries | map(attribute='code_iso') | list %}
+              {% set zone_country_names = zone_countries | map(attribute='name') | list %}
+              {% set matched_branches = [] %}
+              {% for b in branches %}
+                {% set b_country = b.city_ref.region.country.code_iso if (b.city_ref and b.city_ref.region and b.city_ref.region.country) else b.country %}
+                {% if b_country in zone_country_codes or b_country in zone_country_names %}
+                  {% set _ = matched_branches.append(b) %}
+                  <tr>
+                    <td class="font-monospace fw-bold">{{ b.code }}</td>
+                    <td>{{ b.name }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ b_country or 'Non spécifié' }}</span></td>
+                    <td class="font-monospace text-muted">{{ b.currency_code or 'XAF' }}</td>
+                    <td>
+                      {% if b.is_active %}
+                        <span class="badge bg-success-subtle text-success border">{{ t('melodi_accounting.active', 'Active') }}</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ t('melodi_accounting.inactive', 'Inactive') }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+
+              {% if matched_branches | length == 0 %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-3">{{ t('melodi_accounting.aucune_agence_repertoriee_dans', 'Aucune agence répertoriée dans les pays de cette zone.') }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.fermer', 'Fermer') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Modal Lier Pays à une Zone -->
+<div class="modal fade" id="linkCountryZoneModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/charts">
+        <input type="hidden" name="action_type" value="link_country_zone">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.rattacher_un_pays_a', 'Rattacher un Pays à une Zone Comptable') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.pays_cible', 'Pays Cible') }}</label>
+            <select name="country_code_iso" class="form-select form-select-sm" required>
+              {% for c in countries %}
+              <option value="{{ c.code_iso }}">{{ c.name }} ({{ c.code_iso }}) {% if c.zone_code %} - Zone actuelle : {{ c.zone_code }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.zone_comptable_d_imputation', 'Zone Comptable d\'imputation') }}</label>
+            <select name="zone_code" class="form-select form-select-sm" required>
+              {% for z in zones %}
+              <option value="{{ z.code }}">{{ z.name }} ({{ z.code }}) -> {{ z.chart_id }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="alert alert-info x-small mb-0">
+            <i class="bi bi-info-circle me-1"></i> {{ t('melodi_accounting.les_agences_situees_dans', 'Les agences situées dans ce pays hériteront automatiquement du plan comptable de la zone sélectionnée.') }}
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.rattacher_le_pays', 'Rattacher le Pays') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

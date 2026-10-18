@@ -1,0 +1,146 @@
+<div class="container-fluid py-3">
+  <div class="mb-4">
+    <a href="/admin/melodi_accounting/entries" class="text-decoration-none small text-muted d-inline-flex align-items-center gap-1">
+      <img src="/static_base_icons?name=arrow_back" style="width: 14px; height: 14px;"> {{ t('melodi_accounting.retour_aux_pieces_comptables', 'Retour aux Pièces Comptables') }}
+    </a>
+    <h4 class="mt-2 fw-bold">{{ t('melodi_accounting.nouvelle_saisie_de_piece', 'Nouvelle Saisie de Pièce Comptable') }}</h4>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="card-body p-4">
+      <form method="POST" action="/admin/melodi_accounting/entries/create" id="fullEntryForm">
+        <div class="row g-3 mb-4">
+          <div class="col-md-5">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.agence_emettrice', 'Agence Émettrice') }} <span class="text-danger">*</span></label>
+            <select name="agency_id" class="form-select form-select-sm" required>
+              {% for b in branches %}
+              <option value="{{ b.branch_id }}">{{ b.name }} ({{ b.code }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.journal_comptable', 'Journal Comptable') }} <span class="text-danger">*</span></label>
+            <select name="journal_code" class="form-select form-select-sm" required>
+              <option value="VT">{{ t('melodi_accounting.vt_ventes', 'VT - Ventes') }}</option>
+              <option value="AC">{{ t('melodi_accounting.ac_achats', 'AC - Achats') }}</option>
+              <option value="BQ">{{ t('melodi_accounting.bq_banque', 'BQ - Banque') }}</option>
+              <option value="CA">{{ t('melodi_accounting.ca_caisse', 'CA - Caisse') }}</option>
+              <option value="OD">{{ t('melodi_accounting.od_operations_diverses', 'OD - Opérations Diverses') }}</option>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.date_de_la_piece', 'Date de la Pièce') }} <span class="text-danger">*</span></label>
+            <input type="date" name="entry_date" class="form-control form-control-sm" required value="{{ today_date }}">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.libelle_general_de_l', 'Libellé Général de l\'Écriture') }} <span class="text-danger">*</span></label>
+            <input type="text" name="description" class="form-control form-control-sm" required placeholder="Ex: Règlement facture client N°FAC-2026-004">
+          </div>
+        </div>
+
+        <h6 class="fw-bold small border-bottom pb-2 mb-3">{{ t('melodi_accounting.lignage_comptable_equilibre_debit', 'Lignage Comptable (Équilibre Débit / Crédit)') }}</h6>
+
+        <div id="entryItemsList">
+          <div class="row g-2 align-items-center mb-2 entry-row">
+            <div class="col-md-4">
+              <select class="form-select form-select-sm row-account" required>
+                <option value="">{{ t('melodi_accounting.choisir_un_compte', '-- Choisir un compte --') }}</option>
+                {% for acc in accounts %}
+                <option value="{{ acc.code }}">{{ acc.code }} - {{ acc.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <input type="number" step="any" class="form-control form-control-sm row-debit" placeholder="Débit (0.00)" value="0">
+            </div>
+            <div class="col-md-3">
+              <input type="number" step="any" class="form-control form-control-sm row-credit" placeholder="Crédit (0.00)" value="0">
+            </div>
+            <div class="col-md-2 text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn p-1"><img src="/static_base_icons?name=delete&fill=%23dc3545" style="width: 14px; height: 14px;"></button>
+            </div>
+          </div>
+
+          <div class="row g-2 align-items-center mb-2 entry-row">
+            <div class="col-md-4">
+              <select class="form-select form-select-sm row-account" required>
+                <option value="">{{ t('melodi_accounting.choisir_un_compte', '-- Choisir un compte --') }}</option>
+                {% for acc in accounts %}
+                <option value="{{ acc.code }}">{{ acc.code }} - {{ acc.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <input type="number" step="any" class="form-control form-control-sm row-debit" placeholder="Débit (0.00)" value="0">
+            </div>
+            <div class="col-md-3">
+              <input type="number" step="any" class="form-control form-control-sm row-credit" placeholder="Crédit (0.00)" value="0">
+            </div>
+            <div class="col-md-2 text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger remove-line-btn p-1"><img src="/static_base_icons?name=delete&fill=%23dc3545" style="width: 14px; height: 14px;"></button>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" id="addNewLineBtn" class="btn btn-sm btn-light border mt-2 d-inline-flex align-items-center gap-1">
+          <img src="/static_base_icons?name=add_circle" style="width: 14px; height: 14px;"> {{ t('melodi_accounting.ajouter_une_ligne_d', 'Ajouter une ligne d\'écriture') }}
+        </button>
+
+        <input type="hidden" name="items_json" id="itemsJsonField">
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between align-items-center">
+          <a href="/admin/melodi_accounting/entries" class="btn btn-light btn-sm border">{{ t('melodi_accounting.annuler', 'Annuler') }}</a>
+          <button type="submit" class="btn btn-dark btn-sm shadow-sm">{{ t('melodi_accounting.valider_et_enregistrer_la', 'Valider et enregistrer la pièce') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('addNewLineBtn').addEventListener('click', function() {
+  const container = document.getElementById('entryItemsList');
+  const firstRow = container.querySelector('.entry-row');
+  if (firstRow) {
+    const clone = firstRow.cloneNode(true);
+    clone.querySelector('.row-account').value = '';
+    clone.querySelector('.row-debit').value = '0';
+    clone.querySelector('.row-credit').value = '0';
+    container.appendChild(clone);
+  }
+});
+
+document.getElementById('entryItemsList').addEventListener('click', function(e) {
+  if (e.target.closest('.remove-line-btn')) {
+    const rows = document.querySelectorAll('.entry-row');
+    if (rows.length > 2) {
+      e.target.closest('.entry-row').remove();
+    }
+  }
+});
+
+document.getElementById('fullEntryForm').addEventListener('submit', function(e) {
+  const rows = document.querySelectorAll('.entry-row');
+  const items = [];
+  rows.forEach(r => {
+    const acc = r.querySelector('.row-account').value;
+    const deb = parseFloat(r.querySelector('.row-debit').value || 0);
+    const cred = parseFloat(r.querySelector('.row-credit').value || 0);
+    if (acc && (deb > 0 || cred > 0)) {
+      items.push({
+        account_code: acc,
+        debit: deb,
+        credit: cred,
+        local_currency: "XAF",
+        exchange_rate: 1.0
+      });
+    }
+  });
+  document.getElementById('itemsJsonField').value = JSON.stringify(items);
+});
+</script>

@@ -1,0 +1,170 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.file_d_attente_comptable', 'File d\'Attente Comptable (Queue)') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.suivi_et_gestion_des', 'Suivi et gestion des opérations d\'écritures comptables différées ou automatiques') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <form method="POST" action="/admin/melodi_accounting/queue">
+        <input type="hidden" name="action_type" value="retry_all">
+        <button type="submit" class="btn btn-dark btn-sm shadow-sm d-flex align-items-center gap-1">
+          <img src="/static_base_icons?name=refresh&fill=white" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.retraiter_toutes_les_erreurs', 'Retraiter Toutes les Erreurs') }}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-muted small fw-bold uppercase">{{ t('melodi_accounting.total_traites', 'Total Traités') }}</span>
+            <h3 class="fw-bold mb-0 text-dark mt-1">{{ total_count }}</h3>
+          </div>
+          <div class="p-3 bg-light rounded-circle text-dark">
+            <img src="/static_base_icons?name=list" style="width: 24px; height: 24px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-warning border-4">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-warning small fw-bold uppercase">{{ t('melodi_accounting.en_attente', 'En Attente') }}</span>
+            <h3 class="fw-bold mb-0 text-warning mt-1">{{ pending_count }}</h3>
+          </div>
+          <div class="p-3 bg-warning-subtle rounded-circle text-warning">
+            <img src="/static_base_icons?name=hourglass_empty" style="width: 24px; height: 24px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-success border-4">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-success small fw-bold uppercase">{{ t('melodi_accounting.succes', 'Succès') }}</span>
+            <h3 class="fw-bold mb-0 text-success mt-1">{{ processed_count }}</h3>
+          </div>
+          <div class="p-3 bg-success-subtle rounded-circle text-success">
+            <img src="/static_base_icons?name=check_circle" style="width: 24px; height: 24px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card border-0 shadow-sm rounded-3 p-3 bg-white border-start border-danger border-4">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-danger small fw-bold uppercase">{{ t('melodi_accounting.echecs_erreurs', 'Échecs / Erreurs') }}</span>
+            <h3 class="fw-bold mb-0 text-danger mt-1">{{ failed_count }}</h3>
+          </div>
+          <div class="p-3 bg-danger-subtle rounded-circle text-danger">
+            <img src="/static_base_icons?name=error" style="width: 24px; height: 24px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters and Search -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+      <form method="GET" action="/admin/melodi_accounting/queue" class="row g-2 align-items-center">
+        <div class="col-md-6 d-flex gap-2">
+          <a href="/admin/melodi_accounting/queue" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %}">{{ t('melodi_accounting.tous', 'Tous') }}</a>
+          <a href="/admin/melodi_accounting/queue?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %}">{{ t('melodi_accounting.en_attente', 'En attente') }}</a>
+          <a href="/admin/melodi_accounting/queue?status=PROCESSED" class="btn btn-sm {% if status_filter == 'PROCESSED' %}btn-success{% else %}btn-outline-success{% endif %}">{{ t('melodi_accounting.succes', 'Succès') }}</a>
+          <a href="/admin/melodi_accounting/queue?status=FAILED" class="btn btn-sm {% if status_filter == 'FAILED' %}btn-danger{% else %}btn-outline-danger{% endif %}">{{ t('melodi_accounting.echecs', 'Échecs') }}</a>
+        </div>
+        <div class="col-md-6 ms-auto">
+          <div class="input-group input-group-sm">
+            <input type="text" name="search" class="form-control" placeholder="{{ t('melodi_accounting.recherche_queue', 'Rechercher par opcode, module, événement...') }}" value="{{ search or '' }}">
+            <button type="submit" class="btn btn-outline-secondary">
+              <img src="/static_base_icons?name=search" style="width: 14px; height: 14px;">
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Queue Table -->
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 text-sm">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">ID</th>
+              <th>{{ t('melodi_accounting.date', 'Date') }}</th>
+              <th>{{ t('melodi_accounting.module_origine', 'Module Origine') }}</th>
+              <th>{{ t('melodi_accounting.evenement', 'Événement') }}</th>
+              <th>{{ t('melodi_accounting.opcode', 'OpCode') }}</th>
+              <th>{{ t('melodi_accounting.statut', 'Statut') }}</th>
+              <th>{{ t('melodi_accounting.essais', 'Essais') }}</th>
+              <th>{{ t('melodi_accounting.details_erreur', 'Détails / Erreur') }}</th>
+              <th class="pe-3 text-end">{{ t('melodi_accounting.actions', 'Actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in queue_items %}
+            {% set st = item.status.value if item.status.value is defined else item.status|string %}
+            <tr>
+              <td class="ps-3 font-monospace fw-bold">#{{ item.id }}</td>
+              <td><small class="text-muted">{{ item.created_at }}</small></td>
+              <td><span class="badge bg-secondary font-monospace">{{ item.origin_module }}</span></td>
+              <td><code class="text-dark">{{ item.event_name }}</code></td>
+              <td><span class="badge bg-dark font-monospace">{{ item.opcode }}</span></td>
+              <td>
+                {% if st == 'PROCESSED' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="fas fa-check-circle me-1"></i> {{ t('melodi_accounting.traite', 'Traité') }}</span>
+                {% elif st == 'FAILED' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="fas fa-exclamation-triangle me-1"></i> {{ t('melodi_accounting.echoue', 'Échoué') }}</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"><i class="fas fa-clock me-1"></i> {{ t('melodi_accounting.en_attente', 'En attente') }}</span>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-light text-dark border">{{ item.attempts }}</span></td>
+              <td>
+                {% if item.last_error %}
+                  <span class="text-danger small font-monospace text-truncate d-inline-block" style="max-width: 250px;" title="{{ item.last_error }}">
+                    {{ item.last_error }}
+                  </span>
+                {% elif item.journal_entry_id %}
+                  <span class="text-success small fw-bold font-monospace">Pièce #{{ item.journal_entry_id }}</span>
+                {% else %}
+                  <span class="text-muted small">-</span>
+                {% endif %}
+              </td>
+              <td class="pe-3 text-end">
+                {% if st != 'PROCESSED' %}
+                <form method="POST" action="/admin/melodi_accounting/queue" class="d-inline">
+                  <input type="hidden" name="action_type" value="retry_item">
+                  <input type="hidden" name="queue_id" value="{{ item.id }}">
+                  <button type="submit" class="btn btn-sm btn-outline-dark d-inline-flex align-items-center gap-1">
+                    <img src="/static_base_icons?name=refresh" style="width: 14px; height: 14px;"> {{ t('melodi_accounting.ressayer', 'Ressayer') }}
+                  </button>
+                </form>
+                {% else %}
+                <span class="text-muted small"><i class="fas fa-check text-success"></i> {{ t('melodi_accounting.termine', 'Terminé') }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="9" class="text-center py-5 text-muted">
+                <img src="/static_base_icons?name=hourglass_empty" style="width: 48px; height: 48px;" class="d-block mx-auto mb-2 opacity-50">
+                <p class="mb-0">{{ t('melodi_accounting.aucune_operation_dans_la', 'Aucune opération dans la file d\'attente.') }}</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

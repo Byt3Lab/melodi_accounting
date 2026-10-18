@@ -1,0 +1,77 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.balance_generale_des_comptes', 'Balance Générale des Comptes') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.rapport_financier_trie_par', 'Rapport financier trié par l\'index \'order\' des comptes') }}</p>
+    </div>
+    <div class="col-md-3">
+      <form method="GET">
+        <select name="chart_id" class="form-select form-select-sm shadow-sm" onchange="this.form.submit()">
+          {% for chart in charts %}
+          <option value="{{ chart.id }}" {% if active_chart_id == chart.id %}selected{% endif %}>{{ chart.name }} ({{ chart.id }})</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.ordre', 'Ordre') }}</th>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.code_compte', 'Code Compte') }}</th>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.intitule_du_compte', 'Intitulé du Compte') }}</th>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.nature', 'Nature') }}</th>
+            <th colspan="2" class="text-center border-bottom">{{ t('melodi_accounting.mouvements_cumules', 'Mouvements Cumulés') }}</th>
+            <th colspan="2" class="text-center border-bottom">{{ t('melodi_accounting.soldes_rapproches', 'Soldes Rapprochés') }}</th>
+          </tr>
+          <tr>
+            <th class="table-light text-end">{{ t('melodi_accounting.debit', 'Débit') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.credit', 'Crédit') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.solde_debiteurs', 'Solde Débiteurs') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.solde_crediteurs', 'Solde Créditeurs') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in balance %}
+          <tr>
+            <td class="font-monospace text-muted">{{ row.order }}</td>
+            <td class="font-monospace fw-bold">{{ row.account_code }}</td>
+            <td>{{ row.account_name }}</td>
+            <td>
+              {% if row.type_compte == 'ACTIF' %}
+                <span class="badge bg-primary-subtle text-primary border">{{ t('melodi_accounting.actif', 'ACTIF') }}</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border">{{ t('melodi_accounting.passif', 'PASSIF') }}</span>
+              {% endif %}
+            </td>
+            <td class="text-end font-monospace">{{ row.total_debit | round(2) }}</td>
+            <td class="text-end font-monospace">{{ row.total_credit | round(2) }}</td>
+            <td class="text-end font-monospace fw-bold text-primary">
+              {% if row.sold_debit > 0 %}{{ row.sold_debit | round(2) }}{% else %}-{% endif %}
+            </td>
+            <td class="text-end font-monospace fw-bold text-success">
+              {% if row.sold_credit > 0 %}{{ row.sold_credit | round(2) }}{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">{{ t('melodi_accounting.aucune_donnee_de_balance', 'Aucune donnée de balance disponible.') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-dark fw-bold">
+          <tr>
+            <td colspan="4">{{ t('melodi_accounting.totaux_generaux', 'TOTAUX GÉNÉRAUX') }}</td>
+            <td class="text-end font-monospace">{{ tot_debit | round(2) }}</td>
+            <td class="text-end font-monospace">{{ tot_credit | round(2) }}</td>
+            <td class="text-end font-monospace text-info">{{ tot_sold_debit | round(2) }}</td>
+            <td class="text-end font-monospace text-warning">{{ tot_sold_credit | round(2) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

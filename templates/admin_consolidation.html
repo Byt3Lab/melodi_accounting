@@ -1,0 +1,132 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.consolidation_comptable_groupe_siege', 'Consolidation Comptable Groupe (Siège)') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.rapprochement_global_multi_plans', 'Rapprochement global multi-plans vers le référentiel du siège :') }} <span class="badge bg-primary font-monospace">{{ hq_chart_id }}</span></p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/admin/melodi_accounting/mapping_hq" class="btn btn-outline-dark btn-sm shadow-sm d-flex align-items-center gap-1">
+        <img src="/static_base_icons?name=alt_route" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.configurer_le_mapping', 'Configurer le Mapping') }}
+      </a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+      <div class="row text-center">
+        <div class="col-md-3 border-end">
+          <div class="text-muted x-small uppercase fw-bold">{{ t('melodi_accounting.plan_referentiel_siege', 'Plan Référentiel Siège') }}</div>
+          <h5 class="fw-bold text-dark mt-1 mb-0">{{ hq_chart_id }}</h5>
+        </div>
+        <div class="col-md-3 border-end">
+          <div class="text-muted x-small uppercase fw-bold">{{ t('melodi_accounting.total_debit_consolide', 'Total Débit Consolidé') }}</div>
+          <h5 class="fw-bold text-primary mt-1 mb-0">{{ tot_debit | round(2) }} XAF</h5>
+        </div>
+        <div class="col-md-3 border-end">
+          <div class="text-muted x-small uppercase fw-bold">{{ t('melodi_accounting.total_credit_consolide', 'Total Crédit Consolidé') }}</div>
+          <h5 class="fw-bold text-success mt-1 mb-0">{{ tot_credit | round(2) }} XAF</h5>
+        </div>
+        <div class="col-md-3">
+          <div class="text-muted x-small uppercase fw-bold">{{ t('melodi_accounting.solde_consolide_net', 'Solde Consolidé Net') }}</div>
+          <h5 class="fw-bold mt-1 mb-0 {% if tot_sold_debit >= tot_sold_credit %}text-primary{% else %}text-warning{% endif %}">
+            {{ (tot_sold_debit - tot_sold_credit) | abs | round(2) }} XAF
+          </h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.ordre', 'Ordre') }}</th>
+            <th rowspan="2" class="align-middle">Compte Siège ({{ hq_chart_id }})</th>
+            <th rowspan="2" class="align-middle">{{ t('melodi_accounting.intitule_compte_siege', 'Intitulé Compte Siège') }}</th>
+            <th colspan="2" class="text-center border-bottom">{{ t('melodi_accounting.mouvements_consolides', 'Mouvements Consolidés') }}</th>
+            <th colspan="2" class="text-center border-bottom">{{ t('melodi_accounting.soldes_consolides', 'Soldes Consolidés') }}</th>
+            <th rowspan="2" class="align-middle text-end">{{ t('melodi_accounting.comptes_locaux_mappes', 'Comptes Locaux Mappés') }}</th>
+          </tr>
+          <tr>
+            <th class="table-light text-end">{{ t('melodi_accounting.debit', 'Débit') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.credit', 'Crédit') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.solde_deb', 'Solde Déb.') }}</th>
+            <th class="table-light text-end">{{ t('melodi_accounting.solde_cred', 'Solde Créd.') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in consolidated_balance %}
+          <tr>
+            <td class="font-monospace text-muted">{{ row.order }}</td>
+            <td class="font-monospace fw-bold text-primary">{{ row.account_code }}</td>
+            <td>{{ row.account_name }}</td>
+            <td class="text-end font-monospace">{{ row.total_debit | round(2) }}</td>
+            <td class="text-end font-monospace">{{ row.total_credit | round(2) }}</td>
+            <td class="text-end font-monospace fw-bold text-primary">
+              {% if row.sold_debit > 0 %}{{ row.sold_debit | round(2) }}{% else %}-{% endif %}
+            </td>
+            <td class="text-end font-monospace fw-bold text-success">
+              {% if row.sold_credit > 0 %}{{ row.sold_credit | round(2) }}{% else %}-{% endif %}
+            </td>
+            <td class="text-end">
+              {% if row.mapped_local_accounts | length > 0 %}
+                <button class="btn btn-xs btn-outline-secondary font-monospace" data-bs-toggle="collapse" data-bs-target="#mapped_{{ row.account_code }}">
+                  {{ row.mapped_local_accounts | length }} source(s)
+                </button>
+              {% else %}
+                <span class="text-muted x-small">-</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% if row.mapped_local_accounts | length > 0 %}
+          <tr class="collapse bg-light" id="mapped_{{ row.account_code }}">
+            <td colspan="8" class="p-3">
+              <div class="fw-bold x-small uppercase text-muted mb-2">Détails des comptes régionaux consolidés vers le compte siège {{ row.account_code }} :</div>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered bg-white mb-0 x-small">
+                  <thead>
+                    <tr>
+                      <th>{{ t('melodi_accounting.plan_comptable', 'Plan Comptable') }}</th>
+                      <th>{{ t('melodi_accounting.code_compte', 'Code Compte') }}</th>
+                      <th>{{ t('melodi_accounting.intitule_compte_source', 'Intitulé Compte Source') }}</th>
+                      <th class="text-end">{{ t('melodi_accounting.debit', 'Débit') }}</th>
+                      <th class="text-end">{{ t('melodi_accounting.credit', 'Crédit') }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for src in row.mapped_local_accounts %}
+                    <tr>
+                      <td><span class="badge bg-secondary font-monospace">{{ src.chart_id }}</span></td>
+                      <td class="font-monospace fw-bold">{{ src.code }}</td>
+                      <td>{{ src.name }}</td>
+                      <td class="text-end font-monospace text-primary">{{ src.debit | round(2) }}</td>
+                      <td class="text-end font-monospace text-success">{{ src.credit | round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </td>
+          </tr>
+          {% endif %}
+          {% else %}
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">{{ t('melodi_accounting.aucun_compte_a_consolider', 'Aucun compte à consolider.') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-dark fw-bold">
+          <tr>
+            <td colspan="3">{{ t('melodi_accounting.totaux_consolides_groupe', 'TOTAUX CONSOLIDÉS GROUPE') }}</td>
+            <td class="text-end font-monospace">{{ tot_debit | round(2) }}</td>
+            <td class="text-end font-monospace">{{ tot_credit | round(2) }}</td>
+            <td class="text-end font-monospace text-info">{{ tot_sold_debit | round(2) }}</td>
+            <td class="text-end font-monospace text-warning">{{ tot_sold_credit | round(2) }}</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

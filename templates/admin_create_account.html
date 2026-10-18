@@ -1,0 +1,72 @@
+<div class="container-fluid py-3">
+  <div class="mb-4">
+    <a href="/admin/melodi_accounting/accounts" class="text-decoration-none small text-muted d-inline-flex align-items-center gap-1">
+      <img src="/static_base_icons?name=arrow_back" style="width: 14px; height: 14px;"> {{ t('melodi_accounting.retour_au_plan_de', 'Retour au Plan de Comptes') }}
+    </a>
+    <h4 class="mt-2 fw-bold">{{ t('melodi_accounting.creer_un_nouveau_compte', 'Créer un nouveau compte comptable') }}</h4>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="card-body p-4">
+      <form method="POST" action="/admin/melodi_accounting/accounts/create">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.plan_comptable', 'Plan Comptable') }}</label>
+            <select name="chart_id" class="form-select form-select-sm" required>
+              {% for chart in charts %}
+              <option value="{{ chart.id }}" {% if active_chart_id == chart.id %}selected{% endif %}>{{ chart.name }} ({{ chart.id }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.code_compte', 'Code Compte') }} <span class="text-danger">*</span></label>
+            <input type="text" name="code" class="form-control form-control-sm font-monospace" required placeholder="Ex: 571100">
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.classe_de_compte', 'Classe de Compte') }} <span class="text-danger">*</span></label>
+            <input type="text" name="class_code" class="form-control form-control-sm" required placeholder="Ex: 5">
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.intitule_complet_du_compte', 'Intitulé complet du Compte') }} <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control form-control-sm" required placeholder="Ex: Caisse Principale Siège">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.index_d_ordre_de', 'Index d\'Ordre de Tri') }} <span class="text-danger">*</span></label>
+            <input type="number" name="order" class="form-control form-control-sm" required value="571">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.nature_du_compte_binaire', 'Nature du Compte (Binaire)') }} <span class="text-danger">*</span></label>
+            <select name="type_compte" class="form-select form-select-sm" required>
+              <option value="ACTIF">{{ t('melodi_accounting.actif_nature_debitrice', 'ACTIF (Nature Débitrice)') }}</option>
+              <option value="PASSIF">{{ t('melodi_accounting.passif_nature_creditrice', 'PASSIF (Nature Créditrice)') }}</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.compte_siege_mapping_ifrs', 'Compte Siège Mapping (IFRS)') }}</label>
+            <input type="text" name="hq_account_code" class="form-control form-control-sm font-monospace" placeholder="Optionnel (Ex: 100000)">
+          </div>
+
+          <div class="col-12 mt-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" name="is_result_account" id="checkResultAccount">
+              <label class="form-check-label small" for="checkResultAccount">{{ t('melodi_accounting.compte_unique_de_resultat', 'Compte unique de résultat net de l\'exercice (Classe 1)') }}</label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="d-flex justify-content-between align-items-center">
+          <a href="/admin/melodi_accounting/accounts" class="btn btn-light btn-sm border">{{ t('melodi_accounting.annuler', 'Annuler') }}</a>
+          <button type="submit" class="btn btn-dark btn-sm shadow-sm">{{ t('melodi_accounting.creer_le_compte', 'Créer le compte') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

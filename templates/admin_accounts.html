@@ -1,0 +1,159 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.plan_de_comptes', 'Plan de Comptes') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.classification_binaire_actif_passif', 'Classification binaire (Actif/Passif), ordre d\'affichage et mapping Siège') }}</p>
+    </div>
+    <button class="btn btn-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createAccountModal">
+      <img src="/static_base_icons?name=add&fill=white" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouveau_compte', 'Nouveau Compte') }}
+    </button>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-3">
+      <form method="GET" class="row g-2 align-items-center">
+        <div class="col-md-3">
+          <label class="form-label x-small fw-bold text-muted mb-1">{{ t('melodi_accounting.plan_comptable', 'Plan Comptable') }}</label>
+          <select name="chart_id" class="form-select form-select-sm" onchange="this.form.submit()">
+            {% for chart in charts %}
+            <option value="{{ chart.id }}" {% if active_chart_id == chart.id %}selected{% endif %}>{{ chart.name }} ({{ chart.id }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label x-small fw-bold text-muted mb-1">{{ t('melodi_accounting.classe', 'Classe') }}</label>
+          <select name="class_code" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">{{ t('melodi_accounting.toutes', '-- Toutes --') }}</option>
+            {% for c in ["1", "2", "3", "4", "5", "6", "7"] %}
+            <option value="{{ c }}" {% if active_class == c %}selected{% endif %}>Classe {{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label x-small fw-bold text-muted mb-1">{{ t('melodi_accounting.nature_binaire', 'Nature (Binaire)') }}</label>
+          <select name="type_compte" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">{{ t('melodi_accounting.tous', '-- Tous --') }}</option>
+            <option value="ACTIF" {% if active_type == 'ACTIF' %}selected{% endif %}>{{ t('melodi_accounting.actif_debit', 'ACTIF (Débit)') }}</option>
+            <option value="PASSIF" {% if active_type == 'PASSIF' %}selected{% endif %}>{{ t('melodi_accounting.passif_credit', 'PASSIF (Crédit)') }}</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label x-small fw-bold text-muted mb-1">{{ t('melodi_accounting.recherche', 'Recherche') }}</label>
+          <input type="text" name="search" class="form-control form-control-sm" placeholder="{{ t('melodi_accounting.recherche_compte', 'Code ou nom de compte...') }}" value="{{ search or '' }}">
+        </div>
+        <div class="col-md-1 text-end mt-4">
+          <button type="submit" class="btn btn-outline-dark btn-sm w-100 d-flex align-items-center justify-content-center py-1"><img src="/static_base_icons?name=search" style="width: 16px; height: 16px;"></button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('melodi_accounting.ordre', 'Ordre') }}</th>
+            <th>{{ t('melodi_accounting.numero', 'Numéro') }}</th>
+            <th>{{ t('melodi_accounting.intitule_du_compte', 'Intitulé du Compte') }}</th>
+            <th>{{ t('melodi_accounting.classe', 'Classe') }}</th>
+            <th>{{ t('melodi_accounting.nature_type', 'Nature / Type') }}</th>
+            <th>{{ t('melodi_accounting.resultat', 'Résultat ?') }}</th>
+            <th>{{ t('melodi_accounting.mapping_hq', 'Mapping HQ') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for acc in accounts %}
+          <tr>
+            <td class="text-muted font-monospace">{{ acc.order }}</td>
+            <td class="font-monospace fw-bold">{{ acc.code }}</td>
+            <td>{{ acc.name }}</td>
+            <td><span class="badge bg-light text-dark border">Classe {{ acc.class_code }}</span></td>
+            <td>
+              {% if acc.type_compte.value == 'ACTIF' or acc.type_compte == 'ACTIF' %}
+                <span class="badge bg-primary-subtle text-primary border">{{ t('melodi_accounting.actif_debit', 'ACTIF (Débit)') }}</span>
+              {% else %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border">{{ t('melodi_accounting.passif_credit', 'PASSIF (Crédit)') }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if acc.is_result_account %}
+                <span class="badge bg-success">{{ t('melodi_accounting.compte_resultat', 'Compte Résultat') }}</span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if acc.hq_account_code %}
+                <span class="font-monospace text-primary">{{ acc.hq_account_code }}</span>
+              {% else %}
+                <span class="text-muted x-small">{{ t('melodi_accounting.non_mappe', 'Non mappé') }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center text-muted py-4">{{ t('melodi_accounting.aucun_compte_trouve', 'Aucun compte trouvé.') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Création Compte -->
+<div class="modal fade" id="createAccountModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/accounts">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.nouveau_compte_comptable', 'Nouveau Compte Comptable') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="chart_id" value="{{ active_chart_id }}">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.plan_comptable', 'Plan Comptable') }}</label>
+            <input type="text" class="form-control form-control-sm" readonly value="{{ active_chart_id }}">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.code_compte', 'Code Compte') }}</label>
+              <input type="text" name="code" class="form-control form-control-sm font-monospace" required placeholder="Ex: 571100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.classe', 'Classe') }}</label>
+              <input type="text" name="class_code" class="form-control form-control-sm" required placeholder="Ex: 5">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.intitule_du_compte', 'Intitulé du Compte') }}</label>
+            <input type="text" name="name" class="form-control form-control-sm" required placeholder="Ex: Caisse Principale">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.nature_du_compte', 'Nature du Compte') }}</label>
+              <select name="type_compte" class="form-select form-select-sm" required>
+                <option value="ACTIF">{{ t('melodi_accounting.actif_nature_debitrice', 'ACTIF (Nature Débitrice)') }}</option>
+                <option value="PASSIF">{{ t('melodi_accounting.passif_nature_creditrice', 'PASSIF (Nature Créditrice)') }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.ordre_de_tri_index', 'Ordre de tri (Index)') }}</label>
+              <input type="number" name="order" class="form-control form-control-sm" required value="571">
+            </div>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="is_result_account" id="checkResult">
+            <label class="form-check-label small" for="checkResult">{{ t('melodi_accounting.est_le_compte_de', 'Est le compte de résultat net de l\'exercice') }}</label>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.creer_le_compte', 'Créer le compte') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,198 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.automatisation_par_opcodes_regles', 'Automatisation par OpCodes & Règles Comptables') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.configuration_des_regles_de', 'Configuration des règles de comptabilisation automatique par plan comptable (chart_id)') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createOpcodeModal">
+        <img src="/static_base_icons?name=code" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouvel_opcode', 'Nouvel OpCode') }}
+      </button>
+      <button class="btn btn-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createRuleModal">
+        <img src="/static_base_icons?name=add&fill=white" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouvelle_regle', 'Nouvelle Règle') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Événements Extérieurs Inscrits par les Modules Tiers -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+      <h6 class="fw-bold mb-0 text-dark">{{ t('melodi_accounting.evenements_inscrits_par_les', 'Événements Inscrits par les Modules Tiers') }}</h6>
+      <span class="badge bg-secondary font-monospace">{{ registered_events|length if registered_events else 0 }} Événement(s)</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0 x-small">
+          <thead class="table-light">
+            <tr>
+              <th>{{ t('melodi_accounting.module_origine', 'Module Origine') }}</th>
+              <th>{{ t('melodi_accounting.nom_de_l_evenement', 'Nom de l\'Événement') }}</th>
+              <th>{{ t('melodi_accounting.opcode_comptable_associe', 'OpCode Comptable Associé') }}</th>
+              <th>{{ t('melodi_accounting.description', 'Description') }}</th>
+              <th>{{ t('melodi_accounting.statut', 'Statut') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ev in registered_events %}
+            <tr>
+              <td><span class="badge bg-secondary font-monospace">{{ ev.origin_module }}</span></td>
+              <td><code class="text-dark fw-bold">{{ ev.event_name }}</code></td>
+              <td><span class="badge bg-dark font-monospace">{{ ev.opcode }}</span></td>
+              <td class="text-muted">{{ ev.description }}</td>
+              <td><span class="badge bg-success-subtle text-success">{{ t('melodi_accounting.actif', 'Actif') }}</span></td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-3">{{ t('melodi_accounting.aucun_evenement_tiers_inscrit', 'Aucun événement tiers inscrit pour l\'instant. Les modules tiers peuvent étendre cette configuration via l\'action') }} <code>{{ t('melodi_accounting.register_accounting_event', 'register_accounting_event') }}</code>.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    {% for op in opcodes %}
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white border-0 pt-3 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <span class="badge bg-dark font-monospace me-2">{{ op.code }}</span>
+            <small class="text-muted">Module Propriétaire : {{ op.module_owner }}</small>
+          </div>
+        </div>
+        <div class="card-body pt-1 pb-2">
+          <p class="small text-muted mb-2">{{ op.description }}</p>
+          <h6 class="fw-bold x-small uppercase text-muted mb-2">{{ t('melodi_accounting.regles_definies_par_plan', 'Règles Définies par Plan Comptable') }}</h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0 x-small">
+              <thead class="table-light">
+                <tr>
+                  <th>{{ t('melodi_accounting.plan_comptable', 'Plan Comptable') }}</th>
+                  <th>{{ t('melodi_accounting.sens', 'Sens') }}</th>
+                  <th>{{ t('melodi_accounting.compte_cible', 'Compte Cible') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in op.rules %}
+                <tr>
+                  <td><span class="fw-bold font-monospace">{{ r.chart_id }}</span></td>
+                  <td>
+                    {% if r.sens.value == 'DEBIT' or r.sens == 'DEBIT' %}
+                      <span class="badge bg-primary">{{ t('melodi_accounting.debit', 'DÉBIT') }}</span>
+                    {% else %}
+                      <span class="badge bg-success">{{ t('melodi_accounting.credit', 'CRÉDIT') }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="font-monospace fw-bold">{{ r.account_code }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted py-2">{{ t('melodi_accounting.aucune_regle_configuree', 'Aucune règle configurée.') }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm rounded-3 text-center py-5 text-muted">
+        <img src="/static_base_icons?name=tune" style="width: 48px; height: 48px;" class="d-block mx-auto mb-2 opacity-50">
+        <p>{{ t('melodi_accounting.aucun_opcode_enregistre', 'Aucun OpCode enregistré.') }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal Créer OpCode -->
+<div class="modal fade" id="createOpcodeModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/opcodes">
+        <input type="hidden" name="action_type" value="add_opcode">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.declarer_un_opcode', 'Déclarer un OpCode') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.code_de_l_operation', 'Code de l\'opération (OpCode)') }}</label>
+            <input type="text" name="code" class="form-control form-control-sm font-monospace" required placeholder="Ex: POS_CASH_SALE">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.module_proprietaire', 'Module Propriétaire') }}</label>
+            <input type="text" name="module_owner" class="form-control form-control-sm" required placeholder="Ex: POS">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.description', 'Description') }}</label>
+            <textarea name="description" class="form-control form-control-sm" rows="2" required placeholder="Ex: Vente au comptoir..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.enregistrer_l_opcode', 'Enregistrer l\'OpCode') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Créer Règle -->
+<div class="modal fade" id="createRuleModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/opcodes">
+        <input type="hidden" name="action_type" value="add_rule">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.ajouter_une_regle_comptable', 'Ajouter une Règle Comptable') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.opcode_cible', 'OpCode Cible') }}</label>
+            <select name="opcode" class="form-select form-select-sm" required>
+              {% for op in opcodes %}
+              <option value="{{ op.code }}">{{ op.code }} ({{ op.module_owner }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.plan_comptable_chart_id', 'Plan Comptable (chart_id)') }}</label>
+            <select name="chart_id" class="form-select form-select-sm" required>
+              {% for chart in charts %}
+              <option value="{{ chart.id }}">{{ chart.name }} ({{ chart.id }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.sens', 'Sens') }}</label>
+              <select name="sens" class="form-select form-select-sm" required>
+                <option value="DEBIT">{{ t('melodi_accounting.debit', 'DÉBIT') }}</option>
+                <option value="CREDIT">{{ t('melodi_accounting.credit', 'CRÉDIT') }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.compte_cible', 'Compte Cible') }}</label>
+              <select name="account_code" class="form-select form-select-sm" required>
+                {% for acc in accounts %}
+                <option value="{{ acc.code }}">{{ acc.code }} - {{ acc.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.creer_la_regle', 'Créer la Règle') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

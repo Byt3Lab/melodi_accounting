@@ -1,0 +1,6 @@
+{
+    "version": "0.1.0",
+    "name": "melodi_accounting",
+    "title": "Comptabilité Générale Multi-Zone & Multi-Plan",
+    "description": "Module de comptabilité générale pour la gestion des plans comptables, comptes, pièces comptables, conversion multi-devises et automatisation par OpCodes."
+}

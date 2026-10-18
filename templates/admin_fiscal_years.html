@@ -1,0 +1,105 @@
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">{{ t('melodi_accounting.exercices_fiscaux_fiscal_years', 'Exercices Fiscaux (Fiscal Years)') }}</h4>
+      <p class="text-muted small mb-0">{{ t('melodi_accounting.gestion_des_periodes_comptables', 'Gestion des périodes comptables, verrouillage des clôtures et rattrapage rétrospectif') }}</p>
+    </div>
+    <button class="btn btn-dark btn-sm shadow-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#createFyModal">
+      <img src="/static_base_icons?name=calendar_month&fill=white" style="width: 16px; height: 16px;"> {{ t('melodi_accounting.nouvel_exercice_fiscal', 'Nouvel Exercice Fiscal') }}
+    </button>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th>{{ t('melodi_accounting.code_exercice', 'Code Exercice') }}</th>
+            <th>{{ t('melodi_accounting.date_debut', 'Date Début') }}</th>
+            <th>{{ t('melodi_accounting.date_fin', 'Date Fin') }}</th>
+            <th>{{ t('melodi_accounting.statut_cloture', 'Statut Clôture') }}</th>
+            <th>{{ t('melodi_accounting.nombre_d_ecritures', 'Nombre d\'Écritures') }}</th>
+            <th>{{ t('melodi_accounting.actions_de_cloture', 'Actions de Clôture') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fy in fiscal_years %}
+          <tr>
+            <td class="font-monospace fw-bold fs-6">{{ fy.code }}</td>
+            <td><img src="/static_base_icons?name=event" style="width: 14px; height: 14px;" class="me-1 opacity-75">{{ fy.date_start }}</td>
+            <td><img src="/static_base_icons?name=event" style="width: 14px; height: 14px;" class="me-1 opacity-75">{{ fy.date_end }}</td>
+            <td>
+              {% if fy.status.value == 'OPEN' or fy.status == 'OPEN' %}
+                <span class="badge bg-success-subtle text-success border px-2 py-1 d-inline-flex align-items-center gap-1"><img src="/static_base_icons?name=lock_open&fill=%23198754" style="width: 12px; height: 12px;">{{ t('melodi_accounting.ouvert_open', 'OUVERT (OPEN)') }}</span>
+              {% elif fy.status.value == 'CLOSING' or fy.status == 'CLOSING' %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border px-2 py-1 d-inline-flex align-items-center gap-1"><img src="/static_base_icons?name=hourglass_empty" style="width: 12px; height: 12px;">{{ t('melodi_accounting.en_closing', 'EN CLOSING') }}</span>
+              {% else %}
+                <span class="badge bg-danger-subtle text-danger border px-2 py-1 d-inline-flex align-items-center gap-1"><img src="/static_base_icons?name=lock&fill=%23dc3545" style="width: 12px; height: 12px;">{{ t('melodi_accounting.cloture_closed', 'CLÔTURÉ (CLOSED)') }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge bg-light text-dark border">{{ fy.entries | length }} pièces</span>
+            </td>
+            <td>
+              <form method="POST" action="/admin/melodi_accounting/fiscal_years" class="d-flex gap-1 align-items-center">
+                <input type="hidden" name="fiscal_year_id" value="{{ fy.id }}">
+                {% if fy.status.value == 'OPEN' or fy.status == 'OPEN' %}
+                  <button type="submit" name="status" value="CLOSING" class="btn btn-xs btn-outline-warning">
+                    {{ t('melodi_accounting.passer_en_closing', 'Passer en Closing') }}
+                  </button>
+                  <button type="submit" name="status" value="CLOSED" class="btn btn-xs btn-outline-danger" onclick="return confirm('{{ t('melodi_accounting.confirmer_cloture_exercice', 'Êtes-vous sûr de vouloir clôturer définitivement cet exercice ? Toute saisie sera bloquée.') }}')">
+                    {{ t('melodi_accounting.cloturer_closed', 'Clôturer (CLOSED)') }}
+                  </button>
+                {% else %}
+                  <button type="submit" name="status" value="OPEN" class="btn btn-xs btn-outline-success">
+                    {{ t('melodi_accounting.revrouvrir_open', 'Révrouvrir (OPEN)') }}
+                  </button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">{{ t('melodi_accounting.aucun_exercice_fiscal_configure', 'Aucun exercice fiscal configuré.') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Créer Exercice Fiscal -->
+<div class="modal fade" id="createFyModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <form method="POST" action="/admin/melodi_accounting/fiscal_years">
+        <input type="hidden" name="action_type" value="create_fy">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">{{ t('melodi_accounting.creer_un_exercice_fiscal', 'Créer un Exercice Fiscal') }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">{{ t('melodi_accounting.code_exercice', 'Code Exercice') }}</label>
+            <input type="text" name="code" class="form-control form-control-sm font-monospace" required placeholder="Ex: FY-2026">
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.date_de_debut', 'Date de Début') }}</label>
+              <input type="date" name="date_start" class="form-control form-control-sm" required value="2026-01-01">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">{{ t('melodi_accounting.date_de_fin', 'Date de Fin') }}</label>
+              <input type="date" name="date_end" class="form-control form-control-sm" required value="2026-12-31">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">{{ t('melodi_accounting.annuler', 'Annuler') }}</button>
+          <button type="submit" class="btn btn-dark btn-sm">{{ t('melodi_accounting.creer_l_exercice', 'Créer l\'exercice') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
