@@ -220,7 +220,7 @@ class AccountingService:
 
     @staticmethod
     async def link_country_to_zone(session: AsyncSession, country_code_iso: str, zone_code: str) -> bool:
-        from base.models.geo_model import CountryModel
+        from modules.melodi_geo.models.geo_model import CountryModel
         country = await session.get(CountryModel, country_code_iso)
         if not country:
             raise ValueError(f"Pays avec le code ISO '{country_code_iso}' introuvable")
@@ -231,8 +231,8 @@ class AccountingService:
 
     @staticmethod
     async def get_headquarters_chart_id(session: AsyncSession) -> str:
-        from base.models.branch_model import BranchModel, BranchCategoryModel, BranchCategoryRelModel
-        from base.models.geo_model import CountryModel, CityModel, RegionModel
+        from modules.melodi_branches.models.branch_model import BranchModel, BranchCategoryModel, BranchCategoryRelModel
+        from modules.melodi_geo.models.geo_model import CountryModel, CityModel, RegionModel
 
         # Chercher l'agence principale / siège
         stmt_hq = (

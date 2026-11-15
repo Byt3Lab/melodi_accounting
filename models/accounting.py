@@ -31,8 +31,8 @@ from core.orm.model import (
     ForeignKey,
 )
 from base.config import BaseTables
-from base.models.geo_model import CountryModel
-from base.models.branch_model import BranchModel
+from modules.melodi_geo.models.geo_model import CountryModel
+from modules.melodi_branches.models.branch_model import BranchModel
 from ..config import AccountingTables
 
 

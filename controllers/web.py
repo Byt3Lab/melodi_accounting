@@ -4,7 +4,7 @@ from core.routing import Request, Response
 from core.routing.decorator import require_permission
 from core.page_builder import Page, Component
 from base.components import admin_layout
-from base.repositories.branch_repository import BranchRepository
+from modules.melodi_branches.repositories.branch_repository import BranchRepository
 from modules.melodi_accounting.services.accounting_service import AccountingService
 from modules.melodi_accounting.models.accounting import (
     JournalEntryModel,
@@ -75,7 +75,7 @@ class AccountingWebController:
             charts = await AccountingService.get_all_charts(session)
             
             from modules.melodi_accounting.models.accounting import ZoneModel
-            from base.models.geo_model import CountryModel
+            from modules.melodi_geo.models.geo_model import CountryModel
             stmt_zones = select(ZoneModel)
             res_zones = await session.execute(stmt_zones)
             zones = list(res_zones.scalars().all())
